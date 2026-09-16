@@ -62,7 +62,7 @@ export default function AppSidebar({
         <Link href="/" className="flex items-center gap-3 overflow-hidden group">
           <div className="w-9 h-9 rounded-xl bg-white border border-slate-200/90 shadow-xs flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition overflow-hidden p-0.5">
             <img
-              src="/silvefavicon.png"
+              src="/logochanged.jpg"
               alt="Kushal Jewellerys"
               className="w-full h-full object-contain rounded-lg"
             />

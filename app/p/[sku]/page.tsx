@@ -15,7 +15,7 @@ import {
   MapPin,
   Gem,
 } from 'lucide-react';
-import { initialProducts, initialShopConfig } from '@/lib/storage';
+import { initialShopConfig } from '@/lib/storage';
 import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
 
@@ -35,11 +35,7 @@ async function getProductBySku(sku: string) {
     if (product) return product;
   } catch (err) {}
 
-  const fallback = initialProducts.find(
-    (p) => p.sku.toLowerCase() === decodedSku.toLowerCase()
-  );
-
-  return fallback || null;
+  return null;
 }
 
 async function getShopConfig() {

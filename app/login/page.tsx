@@ -47,7 +47,7 @@ export default function LoginPage() {
         <div className="text-center space-y-2">
           <div className="inline-flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-white border border-slate-200/90 shadow-sm p-1.5 mb-2 overflow-hidden hover:scale-105 transition-transform duration-200">
             <img
-              src="/silvefavicon.png"
+              src="/logochanged.jpg"
               alt="Kushal Jewellerys"
               className="w-full h-full object-contain rounded-xl"
             />

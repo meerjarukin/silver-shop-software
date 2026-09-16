@@ -35,9 +35,9 @@
       "purpose": "maskable"
     },
     {
-      "src": "/silvefavicon.png",
+      "src": "/logochanged.jpg",
       "sizes": "1170x1600",
-      "type": "image/png",
+      "type": "image/jpeg",
       "purpose": "any"
     }
   ]

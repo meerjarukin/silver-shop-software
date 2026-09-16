@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { initialProducts } from '@/lib/storage';
 import { generateProductQRCode } from '@/lib/qr';
 
 export async function GET(request: Request) {
@@ -29,22 +28,8 @@ export async function GET(request: Request) {
 
     return NextResponse.json(products);
   } catch (error) {
-    // Graceful fallback to initial mock data if database is not yet migrated
-    let filtered = initialProducts;
-    if (query) {
-      filtered = filtered.filter(
-        (p) =>
-          p.name.toLowerCase().includes(query.toLowerCase()) ||
-          p.sku.toLowerCase().includes(query.toLowerCase())
-      );
-    }
-    if (category && category !== 'All') {
-      filtered = filtered.filter((p) => p.category === category);
-    }
-    if (metal && metal !== 'All') {
-      filtered = filtered.filter((p) => (p.metalType || 'SILVER') === metal);
-    }
-    return NextResponse.json(filtered);
+    console.error('Error querying products:', error);
+    return NextResponse.json([]);
   }
 }
 

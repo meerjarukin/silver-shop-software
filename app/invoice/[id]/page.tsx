@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { notFound, useRouter } from 'next/navigation';
 import PDFInvoiceView from '@/components/PDFInvoiceView';
 import { Invoice } from '@/lib/types';
-import { initialInvoices, initialShopConfig } from '@/lib/storage';
+import { initialShopConfig } from '@/lib/storage';
 
 interface PageProps {
   params: {
@@ -32,18 +32,11 @@ export default function InvoiceViewerPage({ params }: PageProps) {
         if (Array.isArray(data) && data.length > 0) {
           setInvoice(data[0]);
         } else {
-          // Fallback to initial mock invoice
-          const found = initialInvoices.find(
-            (i) => i.invoiceNumber.toLowerCase() === params.id.toLowerCase()
-          );
-          setInvoice(found || null);
+          setInvoice(null);
         }
       })
       .catch(() => {
-        const found = initialInvoices.find(
-          (i) => i.invoiceNumber.toLowerCase() === params.id.toLowerCase()
-        );
-        setInvoice(found || null);
+        setInvoice(null);
       })
       .finally(() => {
         setLoading(false);

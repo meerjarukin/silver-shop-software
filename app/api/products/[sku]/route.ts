@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { initialProducts } from '@/lib/storage';
 
 export async function GET(
   request: Request,
@@ -18,19 +17,10 @@ export async function GET(
       return NextResponse.json(product);
     }
   } catch (error) {
-    console.warn('DB lookup failed, trying fallback store:', error);
+    console.warn('DB lookup failed:', error);
   }
 
-  // Fallback to in-memory/mock store
-  const found = initialProducts.find(
-    (p) => p.sku.toLowerCase() === decodedSku.toLowerCase()
-  );
-
-  if (!found) {
-    return NextResponse.json({ error: 'Product not found' }, { status: 404 });
-  }
-
-  return NextResponse.json(found);
+  return NextResponse.json({ error: 'Product not found' }, { status: 404 });
 }
 
 export async function PUT(

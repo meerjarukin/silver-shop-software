@@ -18,7 +18,7 @@ import {
   Gem,
 } from 'lucide-react';
 import { Product, Customer, Invoice, SilverRates } from '@/lib/types';
-import { initialProducts, initialCustomers, initialInvoices, initialRates } from '@/lib/storage';
+import { initialRates } from '@/lib/storage';
 
 interface GlobalSearchModalProps {
   isOpen: boolean;
@@ -35,9 +35,9 @@ export default function GlobalSearchModal({
 }: GlobalSearchModalProps) {
   const [query, setQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'ALL' | 'CUSTOMERS' | 'PRODUCTS' | 'INVOICES'>('ALL');
-  const [customers, setCustomers] = useState<Customer[]>(initialCustomers);
-  const [products, setProducts] = useState<Product[]>(initialProducts);
-  const [invoices, setInvoices] = useState<Invoice[]>(initialInvoices);
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [rates, setRates] = useState<SilverRates>(initialRates);
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();

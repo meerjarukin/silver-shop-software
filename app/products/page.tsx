@@ -22,7 +22,6 @@ import QRTagModal from '@/components/QRTagModal';
 import CategoryManagementModal from '@/components/CategoryManagementModal';
 import DeleteProductModal from '@/components/DeleteProductModal';
 import { Product, SilverRates, Category } from '@/lib/types';
-import { initialProducts } from '@/lib/storage';
 import { useRates } from '@/context/RatesContext';
 
 const DEFAULT_CATEGORIES = [
@@ -38,7 +37,7 @@ const DEFAULT_CATEGORIES = [
 
 export default function ProductsPage() {
   const { rates } = useRates();
-  const [products, setProducts] = useState<Product[]>(initialProducts);
+  const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [categoryNames, setCategoryNames] = useState<string[]>(DEFAULT_CATEGORIES);
   const [searchQuery, setSearchQuery] = useState('');

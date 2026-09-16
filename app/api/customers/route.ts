@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { initialCustomers } from '@/lib/storage';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -31,17 +30,8 @@ export async function GET(request: Request) {
 
     return NextResponse.json(customers);
   } catch (error) {
-    let filtered = initialCustomers;
-    if (phone) {
-      filtered = filtered.filter((c) => c.phone.includes(phone));
-    } else if (query) {
-      filtered = filtered.filter(
-        (c) =>
-          c.name.toLowerCase().includes(query.toLowerCase()) ||
-          c.phone.includes(query)
-      );
-    }
-    return NextResponse.json(filtered);
+    console.error('Error fetching customers:', error);
+    return NextResponse.json([]);
   }
 }
 

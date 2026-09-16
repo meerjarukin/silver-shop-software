@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { generateProductQRCode } from '@/lib/qr';
-import { initialInvoices } from '@/lib/storage';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -16,7 +15,7 @@ export async function GET(request: Request) {
     });
     return NextResponse.json(invoices);
   } catch (error) {
-    return NextResponse.json(initialInvoices);
+    return NextResponse.json([]);
   }
 }
 

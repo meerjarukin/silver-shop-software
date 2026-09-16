@@ -92,7 +92,7 @@ export default function AppHeader({
           </button>
 
           <div className="md:hidden w-7 h-7 rounded-lg bg-white border border-slate-200/90 shadow-2xs flex items-center justify-center overflow-hidden p-0.5 flex-shrink-0">
-            <img src="/silvefavicon.png" alt="Kushal Jewellerys" className="w-full h-full object-contain" />
+            <img src="/logochanged.jpg" alt="Kushal Jewellerys" className="w-full h-full object-contain rounded-lg" />
           </div>
 
           <div className="min-w-0">
@@ -201,7 +201,7 @@ export default function AppHeader({
                 <div className="flex items-center gap-2.5">
                   <div className="w-9 h-9 rounded-xl bg-white border border-slate-200/90 shadow-xs flex items-center justify-center overflow-hidden p-0.5">
                     <img
-                      src="/silvefavicon.png"
+                      src="/logochanged.jpg"
                       alt="Kushal Jewellerys"
                       className="w-full h-full object-contain rounded-lg"
                     />

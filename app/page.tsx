@@ -28,7 +28,7 @@ import {
   Phone,
 } from 'lucide-react';
 import { Product, SilverRates, Invoice, Customer, KhataTransaction } from '@/lib/types';
-import { initialProducts, initialInvoices, initialCustomers, parseShowcaseRates } from '@/lib/storage';
+import { parseShowcaseRates } from '@/lib/storage';
 import { useAuth } from '@/context/AuthContext';
 import { useRates } from '@/context/RatesContext';
 import CustomerPaymentModal from '@/components/CustomerPaymentModal';
@@ -37,9 +37,9 @@ import RescheduleDueDateModal from '@/components/RescheduleDueDateModal';
 export default function DashboardOverviewPage() {
   const { user } = useAuth();
   const { rates, openRateModal } = useRates();
-  const [products, setProducts] = useState<Product[]>(initialProducts);
-  const [invoices, setInvoices] = useState<Invoice[]>(initialInvoices);
-  const [customers, setCustomers] = useState<Customer[]>(initialCustomers);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
   const [salesTab, setSalesTab] = useState<'TODAY' | 'WEEK' | 'MONTH'>('TODAY');
 
   // Modals for Dues Management
@@ -210,7 +210,7 @@ export default function DashboardOverviewPage() {
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-2xl bg-white border border-slate-200/90 shadow-2xs p-1 flex items-center justify-center overflow-hidden flex-shrink-0">
             <img
-              src="/silvefavicon.png"
+              src="/logochanged.jpg"
               alt="Kushal Jewellerys Logo"
               className="w-full h-full object-contain rounded-xl"
             />

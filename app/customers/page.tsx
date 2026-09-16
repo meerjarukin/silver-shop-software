@@ -32,7 +32,6 @@ import CustomerPaymentModal from '@/components/CustomerPaymentModal';
 import RescheduleDueDateModal from '@/components/RescheduleDueDateModal';
 import DeleteCustomerModal from '@/components/DeleteCustomerModal';
 import { Customer, Invoice, KhataTransaction } from '@/lib/types';
-import { initialCustomers, initialInvoices } from '@/lib/storage';
 
 type PageTab = 'DIRECTORY' | 'DUES';
 type DueFilter = 'DUE_TODAY' | 'OVERDUE' | 'UPCOMING' | 'ALL_OPEN' | 'SETTLED';
@@ -44,10 +43,10 @@ function CustomersCRMContent() {
   const [activeTab, setActiveTab] = useState<PageTab>(initialTab);
   const [dueFilter, setDueFilter] = useState<DueFilter>('DUE_TODAY');
 
-  const [customers, setCustomers] = useState<Customer[]>(initialCustomers);
-  const [invoices, setInvoices] = useState<Invoice[]>(initialInvoices);
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(initialCustomers[0] || null);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
 
   // Mobile View Switch: 'LIST' vs 'DETAIL'
   const [mobileCustomerView, setMobileCustomerView] = useState<'LIST' | 'DETAIL'>('LIST');

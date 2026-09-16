@@ -21,16 +21,15 @@ import StockAdjustmentModal from '@/components/StockAdjustmentModal';
 import PurchaseStockInModal from '@/components/PurchaseStockInModal';
 import DeleteProductModal from '@/components/DeleteProductModal';
 import { Product, SilverRates, PurchaseStockIn } from '@/lib/types';
-import { initialProducts, initialPurchases } from '@/lib/storage';
 import { useRates } from '@/context/RatesContext';
 
 const DEFAULT_CATEGORIES = ['All', 'Anklets', 'Rings', 'Chains', 'Utensils', 'Idols', 'Coins'];
 
 export default function InventoryPage() {
   const { rates } = useRates();
-  const [products, setProducts] = useState<Product[]>(initialProducts);
+  const [products, setProducts] = useState<Product[]>([]);
   const [categoryNames, setCategoryNames] = useState<string[]>(DEFAULT_CATEGORIES);
-  const [purchases, setPurchases] = useState<PurchaseStockIn[]>(initialPurchases);
+  const [purchases, setPurchases] = useState<PurchaseStockIn[]>([]);
   const [activeTab, setActiveTab] = useState<'STOCK' | 'INWARD_LOGS'>('STOCK');
 
   const [searchQuery, setSearchQuery] = useState('');

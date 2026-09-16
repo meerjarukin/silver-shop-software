@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { initialInvoices, initialProducts } from '@/lib/storage';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -24,8 +23,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json(computeAnalytics(allInvoices, products));
   } catch (error) {
-    // Fallback compute using mock dataset
-    return NextResponse.json(computeAnalytics(initialInvoices, initialProducts));
+    return NextResponse.json(computeAnalytics([], []));
   }
 }
 

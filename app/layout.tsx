@@ -10,15 +10,14 @@ export const metadata: Metadata = {
   manifest: '/manifest.json',
   icons: {
     icon: [
-      { url: '/silvefavicon.png', type: 'image/png' },
+      { url: '/logochanged.jpg', type: 'image/jpeg' },
       { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
       { url: '/icon-512.png', sizes: '512x512', type: 'image/png' },
-      { url: '/silvefavicon.jpg', type: 'image/jpeg' },
     ],
-    shortcut: ['/silvefavicon.png'],
+    shortcut: ['/logochanged.jpg'],
     apple: [
       { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
-      { url: '/silvefavicon.png' },
+      { url: '/logochanged.jpg' },
     ],
   },
 };
@@ -31,9 +30,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="icon" href="/silvefavicon.png" type="image/png" sizes="any" />
-        <link rel="shortcut icon" href="/silvefavicon.png" type="image/png" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
+        <link rel="icon" href="/logochanged.jpg" type="image/jpeg" sizes="any" />
+        <link rel="shortcut icon" href="/logochanged.jpg" type="image/jpeg" />
+        <link rel="apple-touch-icon" href="/logochanged.jpg" />
         <link rel="manifest" href="/manifest.json" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />

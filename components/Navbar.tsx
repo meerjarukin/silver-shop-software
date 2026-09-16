@@ -124,9 +124,9 @@ export default function Navbar({
           <Link href="/" className="flex items-center gap-2.5 group">
             <div className="w-10 h-10 rounded-2xl bg-white border border-slate-700/60 flex items-center justify-center shadow-lg group-hover:scale-105 transition overflow-hidden p-1">
               <img
-                src="/silvefavicon.png"
+                src="/logochanged.jpg"
                 alt="Kushal Jewellerys"
-                className="w-full h-full object-contain"
+                className="w-full h-full object-contain rounded-xl"
               />
             </div>
             <div>

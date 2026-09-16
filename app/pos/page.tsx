@@ -37,7 +37,7 @@ import CustomerModal from '@/components/CustomerModal';
 import ProductModal from '@/components/ProductModal';
 import PDFInvoiceView from '@/components/PDFInvoiceView';
 import { Product, SilverRates, CartItem, Customer, Invoice, OldSilverExchange, ShopConfig, InvoiceType, PaymentMode } from '@/lib/types';
-import { initialProducts, initialCustomers, initialShopConfig } from '@/lib/storage';
+import { initialShopConfig } from '@/lib/storage';
 import { useRates } from '@/context/RatesContext';
 
 const DEFAULT_CATEGORIES = ['All', 'Anklets', 'Rings', 'Chains', 'Utensils', 'Idols', 'Coins'];
@@ -48,9 +48,9 @@ function POSBillingContent() {
   const skuParam = searchParams.get('sku') || '';
 
   const { rates } = useRates();
-  const [products, setProducts] = useState<Product[]>(initialProducts);
+  const [products, setProducts] = useState<Product[]>([]);
   const [categoryNames, setCategoryNames] = useState<string[]>(DEFAULT_CATEGORIES);
-  const [customers, setCustomers] = useState<Customer[]>(initialCustomers);
+  const [customers, setCustomers] = useState<Customer[]>([]);
   const [shopConfig, setShopConfig] = useState<ShopConfig>(initialShopConfig);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -125,9 +125,9 @@ function POSBillingContent() {
     fetch('/api/products')
       .then((res) => res.json())
       .then((data) => {
-        if (Array.isArray(data) && data.length > 0) {
+        if (Array.isArray(data)) {
           setProducts(data);
-          if (skuParam) {
+          if (skuParam && data.length > 0) {
             const found = data.find((p: Product) => p.sku.toLowerCase() === skuParam.toLowerCase());
             if (found) addToCart(found);
           }
@@ -156,9 +156,9 @@ function POSBillingContent() {
     fetch('/api/customers')
       .then((res) => res.json())
       .then((data) => {
-        if (Array.isArray(data) && data.length > 0) {
+        if (Array.isArray(data)) {
           setCustomers(data);
-          if (phoneParam) {
+          if (phoneParam && data.length > 0) {
             const found = data.find((c: Customer) => c.phone === phoneParam);
             if (found) {
               setCustomerPhone(found.phone);

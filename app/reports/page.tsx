@@ -19,10 +19,9 @@ import {
   Percent,
 } from 'lucide-react';
 import { Invoice } from '@/lib/types';
-import { initialInvoices } from '@/lib/storage';
 
 export default function ReportsPage() {
-  const [invoices, setInvoices] = useState<Invoice[]>(initialInvoices);
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [reportType, setReportType] = useState<'DAILY' | 'MONTHLY' | 'PROFIT' | 'HSN'>('DAILY');
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
 
