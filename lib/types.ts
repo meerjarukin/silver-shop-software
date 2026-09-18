@@ -10,6 +10,7 @@ export interface Category {
   code?: string | null;
   description?: string | null;
   isDefault?: boolean;
+  sortOrder?: number;
   productCount?: number;
   createdAt?: string | Date;
 }

@@ -14,6 +14,14 @@ import {
   ArrowRight,
   Sparkles,
   Boxes,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+  ChevronUp,
+  ChevronDown,
+  GripVertical,
+  RotateCcw,
+  Loader2,
 } from 'lucide-react';
 import { Category } from '@/lib/types';
 import { useAuth } from '@/context/AuthContext';
@@ -60,6 +68,9 @@ export default function CategoryManagementModal({
       if (Array.isArray(data)) {
         setCategories(data);
         if (onCategoriesUpdated) onCategoriesUpdated(data);
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('categoriesUpdated', { detail: data }));
+        }
       }
     } catch (err) {
       console.error('Failed to load categories:', err);
@@ -74,6 +85,8 @@ export default function CategoryManagementModal({
       resetForm();
       setCategoryToDelete(null);
       setDeleteError(null);
+      setSortField('custom');
+      setSortDirection('asc');
     }
   }, [isOpen]);
 
@@ -186,6 +199,110 @@ export default function CategoryManagementModal({
     }
   };
 
+  type SortField = 'custom' | 'name' | 'code' | 'productCount';
+  type SortDirection = 'asc' | 'desc';
+
+  const [sortField, setSortField] = useState<SortField>('custom');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const [isSavingOrder, setIsSavingOrder] = useState(false);
+  const [orderSavedToast, setOrderSavedToast] = useState(false);
+  const [draggedId, setDraggedId] = useState<string | null>(null);
+  const [dragOverId, setDragOverId] = useState<string | null>(null);
+
+  const handleSortColumn = (field: SortField) => {
+    if (sortField === field) {
+      if (sortDirection === 'asc') {
+        setSortDirection('desc');
+      } else {
+        setSortField('custom');
+        setSortDirection('asc');
+      }
+    } else {
+      setSortField(field);
+      setSortDirection(field === 'productCount' ? 'desc' : 'asc');
+    }
+  };
+
+  const saveOrderToBackend = async (newOrderedList: Category[]) => {
+    setIsSavingOrder(true);
+    try {
+      const orderedIds = newOrderedList.map((c) => c.id);
+      const res = await fetch('/api/categories', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderedIds }),
+      });
+      if (res.ok) {
+        setOrderSavedToast(true);
+        setTimeout(() => setOrderSavedToast(false), 2200);
+        if (onCategoriesUpdated) onCategoriesUpdated(newOrderedList);
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('categoriesUpdated', { detail: newOrderedList }));
+        }
+      }
+    } catch (err) {
+      console.error('Failed to save category order:', err);
+    } finally {
+      setIsSavingOrder(false);
+    }
+  };
+
+  const handleMove = (catId: string, direction: 'up' | 'down') => {
+    const currentIndex = categories.findIndex((c) => c.id === catId);
+    if (currentIndex === -1) return;
+    const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+    if (targetIndex < 0 || targetIndex >= categories.length) return;
+
+    if (sortField !== 'custom') {
+      setSortField('custom');
+    }
+
+    const updated = [...categories];
+    const [moved] = updated.splice(currentIndex, 1);
+    updated.splice(targetIndex, 0, moved);
+
+    setCategories(updated);
+    saveOrderToBackend(updated);
+  };
+
+  const handleDragStart = (e: React.DragEvent, id: string) => {
+    e.dataTransfer.setData('text/plain', id);
+    e.dataTransfer.effectAllowed = 'move';
+    setDraggedId(id);
+  };
+
+  const handleDragOver = (e: React.DragEvent, id: string) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (dragOverId !== id) {
+      setDragOverId(id);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent, targetId: string) => {
+    e.preventDefault();
+    const sourceId = e.dataTransfer.getData('text/plain') || draggedId;
+    setDraggedId(null);
+    setDragOverId(null);
+
+    if (!sourceId || sourceId === targetId) return;
+
+    if (sortField !== 'custom') {
+      setSortField('custom');
+    }
+
+    const sourceIndex = categories.findIndex((c) => c.id === sourceId);
+    const targetIndex = categories.findIndex((c) => c.id === targetId);
+    if (sourceIndex === -1 || targetIndex === -1) return;
+
+    const updated = [...categories];
+    const [moved] = updated.splice(sourceIndex, 1);
+    updated.splice(targetIndex, 0, moved);
+
+    setCategories(updated);
+    saveOrderToBackend(updated);
+  };
+
   if (!isOpen) return null;
 
   const filteredCategories = categories.filter(
@@ -194,6 +311,26 @@ export default function CategoryManagementModal({
       (c.code && c.code.toLowerCase().includes(searchQuery.toLowerCase())) ||
       (c.description && c.description.toLowerCase().includes(searchQuery.toLowerCase()))
   );
+
+  const displayedCategories = [...filteredCategories].sort((a, b) => {
+    if (sortField === 'custom') return 0;
+    if (sortField === 'name') {
+      const cmp = a.name.localeCompare(b.name);
+      return sortDirection === 'asc' ? cmp : -cmp;
+    }
+    if (sortField === 'code') {
+      const codeA = a.code || a.name.slice(0, 3);
+      const codeB = b.code || b.name.slice(0, 3);
+      const cmp = codeA.localeCompare(codeB);
+      return sortDirection === 'asc' ? cmp : -cmp;
+    }
+    if (sortField === 'productCount') {
+      const countA = a.productCount || 0;
+      const countB = b.productCount || 0;
+      return sortDirection === 'asc' ? countA - countB : countB - countA;
+    }
+    return 0;
+  });
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-3 sm:p-4 animate-fade-in">
@@ -370,13 +507,42 @@ export default function CategoryManagementModal({
           {/* Existing Categories List Table */}
           <div className="space-y-3">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <div>
-                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800">
-                  Store Categories ({categories.length})
-                </h3>
-                <p className="text-[11px] text-slate-500">
-                  Active categories shown in POS filters, catalogue and product form.
-                </p>
+              <div className="flex items-center flex-wrap gap-2">
+                <div>
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2">
+                    <span>Store Categories ({categories.length})</span>
+                    {isSavingOrder && (
+                      <span className="flex items-center gap-1 text-[11px] font-normal text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">
+                        <Loader2 className="w-3 h-3 animate-spin" /> saving order...
+                      </span>
+                    )}
+                    {orderSavedToast && (
+                      <span className="flex items-center gap-1 text-[11px] font-normal text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 animate-fade-in">
+                        <CheckCircle2 className="w-3 h-3 text-emerald-600" /> order saved!
+                      </span>
+                    )}
+                  </h3>
+                  <p className="text-[11px] text-slate-500">
+                    {sortField === 'custom'
+                      ? 'Drag ⠿ or use ↑↓ to arrange priority for POS filters & catalogue.'
+                      : `Sorted by ${sortField === 'name' ? 'Category Name' : sortField === 'code' ? 'SKU Prefix' : 'Products'} (${sortDirection.toUpperCase()}).`}
+                  </p>
+                </div>
+
+                {sortField !== 'custom' && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSortField('custom');
+                      setSortDirection('asc');
+                    }}
+                    className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-lg border border-blue-200 transition active:scale-95 shadow-2xs"
+                    title="Reset back to custom priority display"
+                  >
+                    <RotateCcw className="w-3 h-3" />
+                    <span>Reset to POS Order</span>
+                  </button>
+                )}
               </div>
 
               <div className="relative w-full sm:w-56">
@@ -394,77 +560,210 @@ export default function CategoryManagementModal({
             <div className="border border-slate-200/90 rounded-2xl overflow-hidden bg-white shadow-card">
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
-                  <thead>
-                    <tr className="bg-slate-50/80 text-slate-600 font-semibold border-b border-slate-200/80 text-[11px]">
-                      <th className="py-2.5 px-4">Category Name</th>
-                      <th className="py-2.5 px-3">SKU Prefix</th>
+                  <thead className="bg-slate-50/80 text-slate-600 font-semibold border-b border-slate-200/80 text-[11px] select-none">
+                    <tr>
+                      <th className="py-2.5 px-3 w-16 text-center text-slate-400 font-mono text-[10px]">
+                        Order
+                      </th>
+                      <th className="py-2.5 px-4">
+                        <button
+                          type="button"
+                          onClick={() => handleSortColumn('name')}
+                          className={`flex items-center gap-1.5 font-semibold transition group ${
+                            sortField === 'name' ? 'text-blue-700 font-bold' : 'hover:text-slate-900'
+                          }`}
+                          title="Click to sort alphabetically"
+                        >
+                          <span>Category Name</span>
+                          {sortField === 'name' ? (
+                            sortDirection === 'asc' ? (
+                              <ArrowUp className="w-3.5 h-3.5 text-blue-600" />
+                            ) : (
+                              <ArrowDown className="w-3.5 h-3.5 text-blue-600" />
+                            )
+                          ) : (
+                            <ArrowUpDown className="w-3 h-3 text-slate-400 group-hover:text-slate-600" />
+                          )}
+                        </button>
+                      </th>
+                      <th className="py-2.5 px-3">
+                        <button
+                          type="button"
+                          onClick={() => handleSortColumn('code')}
+                          className={`flex items-center gap-1.5 font-semibold transition group ${
+                            sortField === 'code' ? 'text-blue-700 font-bold' : 'hover:text-slate-900'
+                          }`}
+                          title="Click to sort by SKU prefix"
+                        >
+                          <span>SKU Prefix</span>
+                          {sortField === 'code' ? (
+                            sortDirection === 'asc' ? (
+                              <ArrowUp className="w-3.5 h-3.5 text-blue-600" />
+                            ) : (
+                              <ArrowDown className="w-3.5 h-3.5 text-blue-600" />
+                            )
+                          ) : (
+                            <ArrowUpDown className="w-3 h-3 text-slate-400 group-hover:text-slate-600" />
+                          )}
+                        </button>
+                      </th>
                       <th className="py-2.5 px-3">Description</th>
-                      <th className="py-2.5 px-3 text-center">Products</th>
+                      <th className="py-2.5 px-3 text-center">
+                        <button
+                          type="button"
+                          onClick={() => handleSortColumn('productCount')}
+                          className={`inline-flex items-center gap-1.5 font-semibold transition group mx-auto ${
+                            sortField === 'productCount' ? 'text-blue-700 font-bold' : 'hover:text-slate-900'
+                          }`}
+                          title="Click to sort by number of products"
+                        >
+                          <span>Products</span>
+                          {sortField === 'productCount' ? (
+                            sortDirection === 'asc' ? (
+                              <ArrowUp className="w-3.5 h-3.5 text-blue-600" />
+                            ) : (
+                              <ArrowDown className="w-3.5 h-3.5 text-blue-600" />
+                            )
+                          ) : (
+                            <ArrowUpDown className="w-3 h-3 text-slate-400 group-hover:text-slate-600" />
+                          )}
+                        </button>
+                      </th>
                       <th className="py-2.5 px-4 text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {filteredCategories.length === 0 ? (
+                    {displayedCategories.length === 0 ? (
                       <tr>
-                        <td colSpan={5} className="py-8 text-center text-xs text-slate-400">
+                        <td colSpan={6} className="py-8 text-center text-xs text-slate-400">
                           {isLoading ? 'Loading categories...' : 'No categories match your search.'}
                         </td>
                       </tr>
                     ) : (
-                      filteredCategories.map((cat) => (
-                        <tr key={cat.id} className="hover:bg-slate-50/70 transition group">
-                          <td className="py-3 px-4">
-                            <div className="font-bold text-slate-900 flex items-center gap-1.5">
-                              <Tag className="w-3.5 h-3.5 text-slate-400" />
-                              <span>{cat.name}</span>
-                            </div>
-                          </td>
+                      displayedCategories.map((cat) => {
+                        const originalIndex = categories.findIndex((c) => c.id === cat.id);
+                        const isFirst = originalIndex === 0;
+                        const isLast = originalIndex === categories.length - 1;
+                        const isDraggingThis = draggedId === cat.id;
+                        const isOverThis = dragOverId === cat.id;
+                        const canReorder = !searchQuery.trim();
 
-                          <td className="py-3 px-3 font-mono font-bold text-blue-700">
-                            <span className="bg-blue-50 px-2 py-0.5 rounded border border-blue-200/60">
-                              {cat.code || cat.name.slice(0, 3).toUpperCase()}
-                            </span>
-                          </td>
+                        return (
+                          <tr
+                            key={cat.id}
+                            draggable={canReorder}
+                            onDragStart={(e) => handleDragStart(e, cat.id)}
+                            onDragOver={(e) => handleDragOver(e, cat.id)}
+                            onDrop={(e) => handleDrop(e, cat.id)}
+                            onDragEnd={() => {
+                              setDraggedId(null);
+                              setDragOverId(null);
+                            }}
+                            className={`transition group ${
+                              isDraggingThis
+                                ? 'opacity-40 bg-blue-50/50 border-2 border-dashed border-blue-400'
+                                : isOverThis
+                                ? 'border-t-2 border-t-blue-600 bg-blue-50/30'
+                                : 'hover:bg-slate-50/70'
+                            }`}
+                          >
+                            {/* Order / Reorder Handle Column */}
+                            <td className="py-2.5 px-2 text-center align-middle">
+                              <div className="flex items-center justify-center gap-1">
+                                <div
+                                  className={`p-1 text-slate-300 group-hover:text-slate-500 rounded transition ${
+                                    canReorder ? 'cursor-grab active:cursor-grabbing hover:bg-slate-100' : 'cursor-not-allowed opacity-40'
+                                  }`}
+                                  title={canReorder ? 'Drag to change POS store priority' : 'Clear search to reorder'}
+                                >
+                                  <GripVertical className="w-4 h-4" />
+                                </div>
+                                <div className="flex flex-col gap-0.5">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleMove(cat.id, 'up')}
+                                    disabled={isFirst || !canReorder}
+                                    title="Move Up"
+                                    className="text-slate-300 hover:text-blue-600 disabled:opacity-20 disabled:hover:text-slate-300 p-0.5 rounded transition"
+                                  >
+                                    <ChevronUp className="w-3.5 h-3.5" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleMove(cat.id, 'down')}
+                                    disabled={isLast || !canReorder}
+                                    title="Move Down"
+                                    className="text-slate-300 hover:text-blue-600 disabled:opacity-20 disabled:hover:text-slate-300 p-0.5 rounded transition"
+                                  >
+                                    <ChevronDown className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              </div>
+                            </td>
 
-                          <td className="py-3 px-3 text-slate-500 max-w-xs truncate text-[11px]">
-                            {cat.description || '—'}
-                          </td>
+                            {/* Category Name */}
+                            <td className="py-3 px-4">
+                              <div className="flex items-center gap-2">
+                                <span className="text-[10px] font-bold font-mono text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
+                                  #{originalIndex + 1}
+                                </span>
+                                <div className="font-bold text-slate-900 flex items-center gap-1.5">
+                                  <Tag className="w-3.5 h-3.5 text-slate-400" />
+                                  <span>{cat.name}</span>
+                                </div>
+                              </div>
+                            </td>
 
-                          <td className="py-3 px-3 text-center">
-                            <span
-                              className={`px-2 py-0.5 rounded-full font-mono text-[10px] font-bold ${
-                                (cat.productCount || 0) > 0
-                                  ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                                  : 'bg-slate-100 text-slate-500'
-                              }`}
-                            >
-                              {cat.productCount || 0} pcs
-                            </span>
-                          </td>
+                            {/* SKU Prefix */}
+                            <td className="py-3 px-3 font-mono font-bold text-blue-700">
+                              <span className="bg-blue-50 px-2 py-0.5 rounded border border-blue-200/60">
+                                {cat.code || cat.name.slice(0, 3).toUpperCase()}
+                              </span>
+                            </td>
 
-                          <td className="py-3 px-4 text-right">
-                            <div className="flex items-center justify-end gap-1.5">
-                              <button
-                                type="button"
-                                onClick={() => handleStartEdit(cat)}
-                                className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition"
-                                title="Edit category"
+                            {/* Description */}
+                            <td className="py-3 px-3 text-slate-500 max-w-xs truncate text-[11px]">
+                              {cat.description || '—'}
+                            </td>
+
+                            {/* Products */}
+                            <td className="py-3 px-3 text-center">
+                              <span
+                                className={`px-2 py-0.5 rounded-full font-mono text-[10px] font-bold ${
+                                  (cat.productCount || 0) > 0
+                                    ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                                    : 'bg-slate-100 text-slate-500'
+                                }`}
                               >
-                                <Edit2 className="w-3.5 h-3.5" />
-                              </button>
+                                {cat.productCount || 0} pcs
+                              </span>
+                            </td>
 
-                              <button
-                                type="button"
-                                onClick={() => handleDelete(cat, false)}
-                                className="p-1.5 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
-                                title="Delete category"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))
+                            {/* Actions */}
+                            <td className="py-3 px-4 text-right">
+                              <div className="flex items-center justify-end gap-1.5">
+                                <button
+                                  type="button"
+                                  onClick={() => handleStartEdit(cat)}
+                                  className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                                  title="Edit category"
+                                >
+                                  <Edit2 className="w-3.5 h-3.5" />
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => handleDelete(cat, false)}
+                                  className="p-1.5 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
+                                  title="Delete category"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })
                     )}
                   </tbody>
                 </table>

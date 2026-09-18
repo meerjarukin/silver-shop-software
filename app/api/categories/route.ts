@@ -25,11 +25,12 @@ export async function GET() {
     if (categoryDelegate) {
       try {
         dbCategories = await categoryDelegate.findMany({
-          orderBy: { name: 'asc' },
+          orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
         });
 
         // If empty, auto-seed defaults into DB
         if (dbCategories.length === 0) {
+          let seedOrder = 0;
           for (const def of DEFAULT_CATEGORIES) {
             try {
               await categoryDelegate.create({
@@ -38,12 +39,13 @@ export async function GET() {
                   code: def.code,
                   description: def.description,
                   isDefault: true,
+                  sortOrder: seedOrder++,
                 },
               });
             } catch (seedErr) {}
           }
           dbCategories = await categoryDelegate.findMany({
-            orderBy: { name: 'asc' },
+            orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
           });
         }
       } catch (catFindErr) {
@@ -59,6 +61,7 @@ export async function GET() {
         code: cat.code,
         description: cat.description,
         isDefault: true,
+        sortOrder: i,
       }));
     }
 
@@ -125,12 +128,24 @@ export async function POST(request: Request) {
       );
     }
 
+    let nextSortOrder = 0;
+    try {
+      const lastCategory = await categoryDelegate.findFirst({
+        orderBy: { sortOrder: 'desc' },
+        select: { sortOrder: true },
+      });
+      if (lastCategory && typeof lastCategory.sortOrder === 'number') {
+        nextSortOrder = lastCategory.sortOrder + 1;
+      }
+    } catch (orderErr) {}
+
     const newCategory = await categoryDelegate.create({
       data: {
         name: trimmedName,
         code: trimmedCode,
         description: trimmedDesc,
         isDefault: false,
+        sortOrder: nextSortOrder,
       },
     });
 
@@ -138,6 +153,59 @@ export async function POST(request: Request) {
   } catch (error: any) {
     console.error('Error creating category:', error);
     return NextResponse.json({ error: error.message || 'Failed to create category' }, { status: 500 });
+  }
+}
+
+export async function PUT(request: Request) {
+  try {
+    const body = await request.json();
+    const { orderedIds } = body;
+
+    if (!Array.isArray(orderedIds) || orderedIds.length === 0) {
+      return NextResponse.json({ error: 'orderedIds must be a non-empty array of category IDs' }, { status: 400 });
+    }
+
+    const categoryDelegate = (prisma as any).category;
+    if (!categoryDelegate) {
+      return NextResponse.json({ error: 'Database category service unavailable' }, { status: 500 });
+    }
+
+    // Update each category's sortOrder
+    await Promise.all(
+      orderedIds.map((id: string, index: number) =>
+        categoryDelegate.update({
+          where: { id },
+          data: { sortOrder: index },
+        }).catch((err: any) => {
+          console.warn(`Failed to update sortOrder for category ${id}:`, err);
+        })
+      )
+    );
+
+    // Fetch refreshed categories with counts
+    const updatedCategories = await categoryDelegate.findMany({
+      orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
+    });
+
+    const products = await prisma.product.findMany({
+      select: { category: true },
+    });
+    const countMap: Record<string, number> = {};
+    for (const p of products) {
+      if (p.category) {
+        countMap[p.category] = (countMap[p.category] || 0) + 1;
+      }
+    }
+
+    const result = updatedCategories.map((c: any) => ({
+      ...c,
+      productCount: countMap[c.name] || 0,
+    }));
+
+    return NextResponse.json({ success: true, categories: result });
+  } catch (error: any) {
+    console.error('Error reordering categories:', error);
+    return NextResponse.json({ error: error.message || 'Failed to reorder categories' }, { status: 500 });
   }
 }
 
@@ -193,6 +261,7 @@ export async function PATCH(request: Request) {
         ...(trimmedName ? { name: trimmedName } : {}),
         ...(trimmedCode !== undefined ? { code: trimmedCode } : {}),
         ...(trimmedDesc !== undefined ? { description: trimmedDesc } : {}),
+        ...(body.sortOrder !== undefined ? { sortOrder: Number(body.sortOrder) } : {}),
       },
     });
 

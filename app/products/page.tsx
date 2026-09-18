@@ -73,6 +73,19 @@ export default function ProductsPage() {
 
   useEffect(() => {
     loadData();
+
+    const handleCategoriesUpdated = (e: any) => {
+      const data = e.detail;
+      if (Array.isArray(data) && data.length > 0) {
+        setCategories(data);
+        setCategoryNames(['All', ...data.map((c: any) => c.name)]);
+      }
+    };
+    window.addEventListener('categoriesUpdated', handleCategoriesUpdated);
+
+    return () => {
+      window.removeEventListener('categoriesUpdated', handleCategoriesUpdated);
+    };
   }, []);
 
   const filteredProducts = products.filter((p) => {

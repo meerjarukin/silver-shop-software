@@ -171,7 +171,17 @@ function POSBillingContent() {
           }
         }
       })
-      .catch(() => {});
+    const handleCategoriesUpdated = (e: any) => {
+      const data = e.detail;
+      if (Array.isArray(data) && data.length > 0) {
+        setCategoryNames(['All', ...data.map((c: any) => c.name)]);
+      }
+    };
+    window.addEventListener('categoriesUpdated', handleCategoriesUpdated);
+
+    return () => {
+      window.removeEventListener('categoriesUpdated', handleCategoriesUpdated);
+    };
   }, [phoneParam, skuParam]);
 
   const handlePhoneChange = (phoneInput: string) => {

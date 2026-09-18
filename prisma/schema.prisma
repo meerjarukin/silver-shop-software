@@ -46,10 +46,12 @@ model Category {
   code        String?  // Short SKU prefix e.g. ANK, RNG, CHN, UTN
   description String?
   isDefault   Boolean  @default(false)
+  sortOrder   Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   @@index([name])
+  @@index([sortOrder])
 }
 
 model Customer {
