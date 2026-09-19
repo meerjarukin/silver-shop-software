@@ -224,15 +224,25 @@ export default function PDFInvoiceView({ invoice, config, onBack }: PDFInvoiceVi
               <div className="text-slate-500 mt-0.5">{invoice.customerAddress}</div>
             )}
           </div>
-          <div className="sm:text-right">
-            <span className="text-slate-400 font-bold uppercase tracking-wider block mb-1">
-              HSN & Taxation:
-            </span>
-            <div className="text-slate-600">HSN Code: <span className="font-semibold text-slate-900">{config.hsnCode || '7113'}</span></div>
-            <div className="text-slate-600">
-              Regime: {invoice.invoiceType === 'TAX_INVOICE' ? 'GST 3% (Precious Metals)' : 'Non-GST Retail Memo'}
+          {invoice.invoiceType === 'TAX_INVOICE' && (
+            <div className="sm:text-right">
+              <span className="text-slate-400 font-bold uppercase tracking-wider block mb-1">
+                HSN & Taxation:
+              </span>
+              <div className="text-slate-600">HSN Code: <span className="font-semibold text-slate-900">{config.hsnCode || '7113'}</span></div>
+              <div className="text-slate-600">
+                Regime: GST 3% (Precious Metals)
+              </div>
             </div>
-          </div>
+          )}
+          {invoice.invoiceType === 'NON_GST_BILL' && (
+            <div className="sm:text-right">
+              <span className="text-slate-400 font-bold uppercase tracking-wider block mb-1">
+                Billing Format:
+              </span>
+              <div className="text-slate-600 font-medium">Non-GST Retail Memo</div>
+            </div>
+          )}
         </div>
 
         {/* Items Table */}
@@ -260,15 +270,18 @@ export default function PDFInvoiceView({ invoice, config, onBack }: PDFInvoiceVi
                       <div>
                         <span className="font-bold text-slate-900 block">{item.productName}</span>
                         <span className="font-mono text-[10px] text-slate-500">
-                          SKU: {item.productSku} | HSN: {item.hsnCode || '7113'}
+                          SKU: {item.productSku}
+                          {invoice.invoiceType === 'TAX_INVOICE' && (
+                            <> | HSN: {item.hsnCode || '7113'}</>
+                          )}
                         </span>
                       </div>
                     </td>
                     <td className="py-3 px-2 text-right font-medium text-slate-700">
-                      {item.grossWeight.toFixed(2)} g
+                      {(item.grossWeight || 0).toFixed(2)} g
                     </td>
                     <td className="py-3 px-2 text-right font-bold text-slate-900">
-                      {item.netWeight.toFixed(2)} g
+                      {(item.netWeight || 0).toFixed(2)} g
                     </td>
                     <td className="py-3 px-2 text-right text-slate-700">{item.purity}%</td>
                     <td className="py-3 px-2 text-right text-slate-700">

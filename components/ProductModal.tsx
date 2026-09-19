@@ -74,14 +74,14 @@ export default function ProductModal({
   const [metalType, setMetalType] = useState<MetalType>('SILVER');
   const [sku, setSku] = useState('');
   const [description, setDescription] = useState('');
-  const [grossWeight, setGrossWeight] = useState<number>(10.0);
-  const [stoneWeight, setStoneWeight] = useState<number>(0.0);
+  const [grossWeight, setGrossWeight] = useState<string | number>('');
+  const [stoneWeight, setStoneWeight] = useState<string | number>(0.0);
   const [purity, setPurity] = useState<number>(92.5);
   const [purityGrade, setPurityGrade] = useState<PurityGrade>('925 Sterling');
   const [purchaseRatePerGram, setPurchaseRatePerGram] = useState<number>(72.0);
   const [wastagePercentage, setWastagePercentage] = useState<number>(2.0);
   const [makingChargeType, setMakingChargeType] = useState<MakingChargeType>('PER_GRAM');
-  const [makingChargeValue, setMakingChargeValue] = useState<number>(50.0);
+  const [makingChargeValue, setMakingChargeValue] = useState<string | number>('');
   const [gstPercentage, setGstPercentage] = useState<number>(3.0);
   const [stockQuantity, setStockQuantity] = useState<number>(5);
   const [minStockAlert, setMinStockAlert] = useState<number>(2);
@@ -105,7 +105,7 @@ export default function ProductModal({
     loadCategories();
   }, []);
 
-  const netWeight = Math.max(0, grossWeight - stoneWeight);
+  const netWeight = Math.max(0, (Number(grossWeight) || 0) - (Number(stoneWeight) || 0));
 
   useEffect(() => {
     if (productToEdit) {
@@ -114,14 +114,14 @@ export default function ProductModal({
       setMetalType(productToEdit.metalType || 'SILVER');
       setSku(productToEdit.sku);
       setDescription(productToEdit.description || '');
-      setGrossWeight(productToEdit.grossWeight);
-      setStoneWeight(productToEdit.stoneWeight);
+      setGrossWeight(productToEdit.grossWeight !== undefined && productToEdit.grossWeight !== null ? productToEdit.grossWeight : '');
+      setStoneWeight(productToEdit.stoneWeight !== undefined && productToEdit.stoneWeight !== null ? productToEdit.stoneWeight : 0.0);
       setPurity(productToEdit.purity);
       setPurityGrade(productToEdit.purityGrade);
       setPurchaseRatePerGram(productToEdit.purchaseRatePerGram || (productToEdit.metalType === 'GOLD' ? (rates.goldRate916 || 7150) : 72.0));
       setWastagePercentage(productToEdit.wastagePercentage || 0.0);
       setMakingChargeType(productToEdit.makingChargeType);
-      setMakingChargeValue(productToEdit.makingChargeValue);
+      setMakingChargeValue(productToEdit.makingChargeValue !== undefined && productToEdit.makingChargeValue !== null ? productToEdit.makingChargeValue : '');
       setGstPercentage(productToEdit.gstPercentage || 3.0);
       setStockQuantity(productToEdit.stockQuantity);
       setMinStockAlert(productToEdit.minStockAlert);
@@ -138,11 +138,11 @@ export default function ProductModal({
       setSku(generateSkuForProduct(initialMetal, initialCat, initialGrade, categoriesData));
       setName(initialName || '');
       setDescription('');
-      setGrossWeight(10.0);
+      setGrossWeight('');
       setStoneWeight(0.0);
       setWastagePercentage(2.0);
       setMakingChargeType('PER_GRAM');
-      setMakingChargeValue(50.0);
+      setMakingChargeValue('');
       setGstPercentage(3.0);
       setStockQuantity(5);
       setMinStockAlert(2);
@@ -251,15 +251,15 @@ export default function ProductModal({
       category,
       metalType,
       description: description.trim(),
-      grossWeight: Number(grossWeight),
-      stoneWeight: Number(stoneWeight),
-      netWeight: Number(netWeight),
+      grossWeight: Number(grossWeight) || 0,
+      stoneWeight: Number(stoneWeight) || 0,
+      netWeight: Number(netWeight) || 0,
       purity: Number(purity),
       purityGrade,
       purchaseRatePerGram: Number(purchaseRatePerGram),
       wastagePercentage: Number(wastagePercentage),
       makingChargeType,
-      makingChargeValue: Number(makingChargeValue),
+      makingChargeValue: Number(makingChargeValue) || 0,
       gstPercentage: Number(gstPercentage),
       stockQuantity: Number(stockQuantity),
       minStockAlert: Number(minStockAlert),
@@ -434,16 +434,15 @@ export default function ProductModal({
           {/* Row 3: Weight Breakdown */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3 bg-slate-50/80 p-3 sm:p-3.5 rounded-xl border border-slate-100">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Gross Wt (g) *</label>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Gross Wt (g)</label>
               <input
                 type="number"
                 step="0.01"
                 min="0"
-                required
                 placeholder="0.00"
-                value={grossWeight === 0 ? '' : grossWeight}
+                value={grossWeight}
                 onKeyDown={handleNumericKeyDown}
-                onChange={(e) => setGrossWeight(sanitizeNum(e.target.value))}
+                onChange={(e) => setGrossWeight(e.target.value)}
                 className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 font-bold focus:outline-none"
               />
             </div>
@@ -579,11 +578,10 @@ export default function ProductModal({
                   type="number"
                   step="0.5"
                   min="0"
-                  required
                   placeholder="0.0"
-                  value={makingChargeValue === 0 ? '' : makingChargeValue}
+                  value={makingChargeValue}
                   onKeyDown={handleNumericKeyDown}
-                  onChange={(e) => setMakingChargeValue(sanitizeNum(e.target.value))}
+                  onChange={(e) => setMakingChargeValue(e.target.value)}
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-900 font-bold font-mono"
                 />
               </div>

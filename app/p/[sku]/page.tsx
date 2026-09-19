@@ -159,14 +159,14 @@ export default async function PublicProductVerificationPage({ params }: PageProp
             <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
               <span className="text-[11px] text-slate-400 block font-medium">Net Silver Weight</span>
               <span className="text-sm font-bold text-slate-900 font-mono mt-0.5 block">
-                {product.netWeight.toFixed(2)} g
+                {(product.netWeight || 0).toFixed(2)} g
               </span>
             </div>
 
             <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
               <span className="text-[11px] text-slate-400 block font-medium">Gross Weight</span>
               <span className="text-sm font-bold text-slate-700 font-mono mt-0.5 block">
-                {product.grossWeight.toFixed(2)} g
+                {(product.grossWeight || 0).toFixed(2)} g
               </span>
             </div>
 

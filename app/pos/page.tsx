@@ -60,9 +60,9 @@ function POSBillingContent() {
   // Mobile View Switcher: 'CATALOG' vs 'BILL'
   const [mobileTab, setMobileTab] = useState<'CATALOG' | 'BILL'>('CATALOG');
 
-  // Bill Format Toggle
-  const [invoiceType, setInvoiceType] = useState<InvoiceType>('TAX_INVOICE');
-  const [taxType, setTaxType] = useState<'INTRA_STATE' | 'INTER_STATE' | 'NONE'>('INTRA_STATE');
+  // Bill Format Toggle (Defaults to Estimate / Quotation)
+  const [invoiceType, setInvoiceType] = useState<InvoiceType>('ESTIMATE_QUOTATION');
+  const [taxType, setTaxType] = useState<'INTRA_STATE' | 'INTER_STATE' | 'NONE'>('NONE');
 
   // Customer State
   const [customerPhone, setCustomerPhone] = useState('');
@@ -371,7 +371,7 @@ function POSBillingContent() {
     const purityCode = metalType === 'GOLD' ? '916' : '925';
     const generatedSku = prodData.sku || `${metalPrefix}-${categoryCode}-${purityCode}-${randomSuffix}`;
 
-    const grossWeight = Number(prodData.grossWeight || 10);
+    const grossWeight = Number(prodData.grossWeight || 0);
     const stoneWeight = Number(prodData.stoneWeight || 0);
     const netWeight = Number(prodData.netWeight || Math.max(0, grossWeight - stoneWeight));
 
@@ -390,7 +390,7 @@ function POSBillingContent() {
       purchaseRatePerGram: Number(prodData.purchaseRatePerGram || 72),
       wastagePercentage: Number(prodData.wastagePercentage || 0),
       makingChargeType: prodData.makingChargeType || 'PER_GRAM',
-      makingChargeValue: Number(prodData.makingChargeValue || 50),
+      makingChargeValue: Number(prodData.makingChargeValue || 0),
       gstPercentage: Number(prodData.gstPercentage || 3),
       stockQuantity: Number(prodData.stockQuantity || 5),
       minStockAlert: Number(prodData.minStockAlert || 1),
@@ -532,9 +532,9 @@ function POSBillingContent() {
       discount: discountAmount,
       oldSilver: hasOldSilver ? oldSilver : undefined,
       taxableAmount,
-      cgst,
-      sgst,
-      igst,
+      cgst: invoiceType === 'TAX_INVOICE' ? cgst : 0,
+      sgst: invoiceType === 'TAX_INVOICE' ? sgst : 0,
+      igst: invoiceType === 'TAX_INVOICE' ? igst : 0,
       cardCharge,
       grandTotal,
       paymentMode: useAdvanceBalance && grandTotal === 0 ? 'ADVANCE_ADJUST' : paymentMode,
@@ -567,7 +567,11 @@ function POSBillingContent() {
         body: JSON.stringify(invoicePayload),
       });
       const data = await res.json();
-      setCompletedInvoice(data);
+      setCompletedInvoice({
+        ...data,
+        invoiceType: data.invoiceType || invoiceType,
+        taxType: data.taxType || (invoiceType === 'TAX_INVOICE' ? taxType : 'NONE'),
+      });
 
       try {
         confetti({

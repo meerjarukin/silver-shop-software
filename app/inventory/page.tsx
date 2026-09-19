@@ -75,9 +75,9 @@ export default function InventoryPage() {
     return matchesSearch && matchesCat && matchesStock;
   });
 
-  const totalGrams = products.reduce((acc, p) => acc + p.netWeight * p.stockQuantity, 0);
+  const totalGrams = products.reduce((acc, p) => acc + (p.netWeight || 0) * (p.stockQuantity || 0), 0);
   const totalCostValue = products.reduce(
-    (acc, p) => acc + (p.purchaseRatePerGram || 72) * p.netWeight * p.stockQuantity,
+    (acc, p) => acc + (p.purchaseRatePerGram || 72) * (p.netWeight || 0) * (p.stockQuantity || 0),
     0
   );
 
@@ -120,14 +120,22 @@ export default function InventoryPage() {
       createdAt: new Date().toISOString(),
     } as Product;
 
-    setProducts((prev) => [saved, ...prev.filter((p) => p.id !== saved.id)]);
+    setProducts((prev) => [saved, ...prev.filter((p) => p.id !== saved.id && p.sku !== saved.sku)]);
 
     try {
-      await fetch('/api/products', {
+      const res = await fetch('/api/products', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(prodData),
       });
+      if (res.ok) {
+        const savedDB = await res.json();
+        if (savedDB && savedDB.id) {
+          setProducts((prev) =>
+            prev.map((p) => (p.sku === savedDB.sku || p.id === savedDB.id ? { ...p, ...savedDB } : p))
+          );
+        }
+      }
     } catch (e) {}
   };
 

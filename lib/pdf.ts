@@ -27,13 +27,21 @@ export async function generateInvoicePDF(invoice: Invoice, config: ShopConfig): 
   doc.text(config.tagline || 'Pure Silver Ornaments, Pooja Articles & Fine Silverware', 14, 27);
   doc.text(config.address || '#3-550, Ground Floor, Bazar Street, Revenue Ward No 3, Srikalahasti, Tirupati Dist., Andhra Pradesh - 517644', 14, 31);
   doc.text(`Phone: ${config.phone || '+91 98765 43210'} | Email: ${config.email || 'sales@kushaljewellerys.com'}`, 14, 35);
-  doc.text(`GSTIN: ${config.gstin || '37AVEPG9436B1ZP'} | HSN: ${config.hsnCode || '7113'}`, 14, 39);
+  if (invoice.invoiceType === 'TAX_INVOICE') {
+    doc.text(`GSTIN: ${config.gstin || '37AVEPG9436B1ZP'} | HSN: ${config.hsnCode || '7113'}`, 14, 39);
+  }
 
   // Invoice Title Right Aligned
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(16);
   doc.setTextColor(...accentColor);
-  doc.text('TAX INVOICE', 196, 20, { align: 'right' });
+  const invoiceTitle =
+    invoice.invoiceType === 'ESTIMATE_QUOTATION'
+      ? 'ESTIMATE / QUOTATION'
+      : invoice.invoiceType === 'NON_GST_BILL'
+      ? 'RETAIL CASH MEMO'
+      : 'TAX INVOICE';
+  doc.text(invoiceTitle, 196, 20, { align: 'right' });
 
   const formatPayMode = (mode: string) => {
     switch (mode) {
@@ -79,11 +87,14 @@ export async function generateInvoicePDF(invoice: Invoice, config: ShopConfig): 
   // Items rows for table
   const itemRows = invoice.items.map((item, idx) => ({
     idx: idx + 1,
-    desc: `${item.productName}\nSKU: ${item.productSku} (Purity: ${item.purity}%)`,
-    grossWt: `${item.grossWeight.toFixed(2)} g`,
-    netWt: `${item.netWeight.toFixed(2)} g`,
-    rate: `Rs. ${item.silverRateApplied.toFixed(2)}/g`,
-    making: `Rs. ${item.makingCharge.toFixed(2)}`,
+    desc:
+      invoice.invoiceType === 'TAX_INVOICE'
+        ? `${item.productName}\nSKU: ${item.productSku} (Purity: ${item.purity}%) | HSN: ${item.hsnCode || '7113'}`
+        : `${item.productName}\nSKU: ${item.productSku} (Purity: ${item.purity}%)`,
+    grossWt: `${(item.grossWeight || 0).toFixed(2)} g`,
+    netWt: `${(item.netWeight || 0).toFixed(2)} g`,
+    rate: `Rs. ${(item.silverRateApplied || 0).toFixed(2)}/g`,
+    making: `Rs. ${(item.makingCharge || 0).toFixed(2)}`,
     qty: item.quantity || 1,
     total: `Rs. ${item.totalPrice.toFixed(2)}`,
   }));
@@ -165,13 +176,15 @@ export async function generateInvoicePDF(invoice: Invoice, config: ShopConfig): 
     doc.setTextColor(51, 65, 85);
   }
 
-  currentY += 5;
-  doc.text('CGST (1.5%):', rightX, currentY);
-  doc.text(`Rs. ${invoice.cgst.toFixed(2)}`, valX, currentY, { align: 'right' });
+  if (invoice.invoiceType === 'TAX_INVOICE') {
+    currentY += 5;
+    doc.text('CGST (1.5%):', rightX, currentY);
+    doc.text(`Rs. ${(invoice.cgst || 0).toFixed(2)}`, valX, currentY, { align: 'right' });
 
-  currentY += 5;
-  doc.text('SGST (1.5%):', rightX, currentY);
-  doc.text(`Rs. ${invoice.sgst.toFixed(2)}`, valX, currentY, { align: 'right' });
+    currentY += 5;
+    doc.text('SGST (1.5%):', rightX, currentY);
+    doc.text(`Rs. ${(invoice.sgst || 0).toFixed(2)}`, valX, currentY, { align: 'right' });
+  }
 
   if (invoice.cardCharge && invoice.cardCharge > 0) {
     currentY += 5;

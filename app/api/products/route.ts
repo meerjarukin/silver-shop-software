@@ -41,16 +41,37 @@ export async function POST(request: Request) {
     const sku = body.sku || `${metalPrefix}-${Date.now().toString().slice(-6)}`;
     const qrCodeUrl = await generateProductQRCode(sku);
 
-    const product = await prisma.product.create({
-      data: {
+    const product = await prisma.product.upsert({
+      where: { sku },
+      update: {
+        ...(body.name && { name: body.name }),
+        ...(body.category && { category: body.category }),
+        metalType,
+        description: body.description !== undefined ? body.description : '',
+        grossWeight: Number(body.grossWeight || 0),
+        stoneWeight: Number(body.stoneWeight || 0),
+        netWeight: Number(body.netWeight || 0),
+        purity: Number(body.purity || (metalType === 'GOLD' ? 91.6 : 92.5)),
+        purityGrade: body.purityGrade || (metalType === 'GOLD' ? '916 22K' : '925 Sterling'),
+        purchaseRatePerGram: Number(body.purchaseRatePerGram || (metalType === 'GOLD' ? 7150 : 72)),
+        wastagePercentage: Number(body.wastagePercentage || 0),
+        makingChargeType: body.makingChargeType || 'PER_GRAM',
+        makingChargeValue: Number(body.makingChargeValue || 0),
+        gstPercentage: Number(body.gstPercentage || 3),
+        ...(body.imageUrl !== undefined && { imageUrl: body.imageUrl || null }),
+        stockQuantity: Number(body.stockQuantity || 1),
+        minStockAlert: Number(body.minStockAlert || 2),
+        qrCodeUrl,
+      },
+      create: {
         sku,
         name: body.name,
         category: body.category || 'Anklets',
         metalType,
         description: body.description || '',
-        grossWeight: Number(body.grossWeight),
+        grossWeight: Number(body.grossWeight || 0),
         stoneWeight: Number(body.stoneWeight || 0),
-        netWeight: Number(body.netWeight),
+        netWeight: Number(body.netWeight || 0),
         purity: Number(body.purity || (metalType === 'GOLD' ? 91.6 : 92.5)),
         purityGrade: body.purityGrade || (metalType === 'GOLD' ? '916 22K' : '925 Sterling'),
         purchaseRatePerGram: Number(body.purchaseRatePerGram || (metalType === 'GOLD' ? 7150 : 72)),

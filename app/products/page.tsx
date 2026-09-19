@@ -129,14 +129,22 @@ export default function ProductsPage() {
       createdAt: new Date().toISOString(),
     } as Product;
 
-    setProducts((prev) => [saved, ...prev.filter((p) => p.id !== saved.id)]);
+    setProducts((prev) => [saved, ...prev.filter((p) => p.id !== saved.id && p.sku !== saved.sku)]);
 
     try {
-      await fetch('/api/products', {
+      const res = await fetch('/api/products', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(prodData),
       });
+      if (res.ok) {
+        const savedDB = await res.json();
+        if (savedDB && savedDB.id) {
+          setProducts((prev) =>
+            prev.map((p) => (p.sku === savedDB.sku || p.id === savedDB.id ? { ...p, ...savedDB } : p))
+          );
+        }
+      }
     } catch (e) {}
   };
 
@@ -469,10 +477,10 @@ export default function ProductsPage() {
 
                       <td className="py-3.5 px-3 text-right">
                         <span className="font-bold text-slate-900 font-mono block">
-                          {prod.netWeight.toFixed(2)} g
+                          {(prod.netWeight || 0).toFixed(2)} g
                         </span>
                         <span className="text-[10px] text-slate-400 font-mono">
-                          Gr: {prod.grossWeight.toFixed(2)}g
+                          Gr: {(prod.grossWeight || 0).toFixed(2)}g
                         </span>
                       </td>
 

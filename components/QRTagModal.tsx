@@ -63,7 +63,7 @@ export default function QRTagModal({ product, isOpen, onClose }: QRTagModalProps
             <div class="prod-name">${product.name}</div>
             <div class="specs">
               <div>SKU: <strong>${product.sku}</strong></div>
-              <div>NW: <strong>${product.netWeight.toFixed(2)}g</strong> | GW: <strong>${product.grossWeight.toFixed(2)}g</strong></div>
+              <div>NW: <strong>${(product.netWeight || 0).toFixed(2)}g</strong> | GW: <strong>${(product.grossWeight || 0).toFixed(2)}g</strong></div>
               <div>Purity: <strong>${product.purity}% (${product.purityGrade || '925'})</strong></div>
             </div>
           </div>
@@ -256,7 +256,7 @@ export default function QRTagModal({ product, isOpen, onClose }: QRTagModalProps
               <div className="font-bold text-xs text-slate-900 truncate mt-0.5">{product.name}</div>
               <div className="text-[11px] text-slate-600 font-mono mt-1 space-y-0.5">
                 <div>SKU: <strong className="text-slate-900">{product.sku}</strong></div>
-                <div>NW: <strong>{product.netWeight.toFixed(2)}g</strong> | GW: <strong>{product.grossWeight.toFixed(2)}g</strong></div>
+                <div>NW: <strong>{(product.netWeight || 0).toFixed(2)}g</strong> | GW: <strong>{(product.grossWeight || 0).toFixed(2)}g</strong></div>
                 <div>Purity: <strong>{product.purity}% ({product.purityGrade || '925'})</strong></div>
               </div>
             </div>
